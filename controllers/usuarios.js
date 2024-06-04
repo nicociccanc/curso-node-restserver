@@ -1,61 +1,69 @@
 const { response } = require ('express');
+const bcryptjs = require ('bcryptjs');
 
 
-const usuariosGet = (req = request, res = response) => {
+const Usuario = require('../models/usuario');
+
+const usuariosGet = async (req = request, res = response) => {
     
-    const {q, nombre='Sin nombre', apikey, page=1, limit=1} = req.query;
+    // const {q, nombre='Sin nombre', apikey, page=1, limit=1} = req.query;
+    const {limite = 5, desde = 0} = req.query;
+    const query = {estado: true};
+
+    //Creo esta promesa para que no acumule el tiempo que tarda cada una
+    const [total, usuarios] = await Promise.all([
+        Usuario.countDocuments(query),
+        Usuario.find(query)
+            .skip( Number ( desde ) )
+            .limit( Number( limite ) )
+    ]);
 
     res.json({
-        msg: 'get API - controlador',
-        q,
-        nombre,
-        apikey,
-        page,
-        limit
+        total,
+        usuarios
     });
 
 }
 
-const usuariosPost= (req, res = response) => {
+const usuariosPost = async (req, res = response) => {
+
+    // 1. Obtención del cuerpo de la solicitud
+    const { nombre, correo, password, rol} = req.body;
+
+    // 2. Creación de una nueva instancia de Usuario con los datos del cuerpo de la solicitud
+    const usuario = new Usuario({ nombre, correo, password, rol });
+
+    //Encriptar la contraseña
+    const salt = bcryptjs.genSaltSync();
+    usuario.password = bcryptjs.hashSync(password, salt);
     
-    //Como extraigo el body?
-    //Aca viene la informacion que estoy mandando en el POST
-    const { nombre, edad } = req.body;
-    //Desestructurando solo agarro el dato que yo quiero
-    //Si recibo mas datos, solo tomo los que indico aca
-    res.json({
-        msg: 'post API - controlador',
-        nombre,
-        edad
+    // 3. Guardado del nuevo usuario en la base de datos (espera a que la operación termine)
+    await usuario.save();
+
+    // 4. Envío de la respuesta al cliente con un mensaje y el usuario recién creado
+    res.json({ 
+        usuario
     });
- 
 }
 
-const usuariosPut= (req, res = response) => {
+const usuariosPut = async (req, res = response) => {
     
-    //desestructuro el REQ
     const {id} = req.params;
+    const { _id, password, google, correo, ... resto} = req.body;
 
-    res.json({
-        msg: 'put API - controlador',
-        id
-    });
+    //TODO validar contra base de datos
+
+    if ( password ){
+        //Encriptar contraseña
+        const salt = bcryptjs.genSaltSync();
+        resto.password = bcryptjs.hashSync(password, salt);
+    }
+
+    const usuario = await Usuario.findByIdAndUpdate( id, resto );
+
+    res.json(usuario);
 }
 
-// const usuariosPut = (req, res = response) => {
-//     const { id } = req.params;
-
-//     if (!id) {
-//         return res.status(400).json({
-//             msg: 'Error: Debes proporcionar un ID en la URL.'
-//         });
-//     }
-
-//     res.json({
-//         msg: 'put API - controlador',
-//         id
-//     });
-// }
 
 const usuariosPatch= (req, res = response) => {
     
@@ -65,11 +73,14 @@ const usuariosPatch= (req, res = response) => {
 
 }
 
-const usuariosDelete= (req, res = response) => {
+const usuariosDelete= async(req, res = response) => {
     
-    res.json({
-        msg: 'delete API - controlador'
-    });
+    const {id} = req.params;
+    //Fisicamente lo borramos Si lo hacemos asi perdemos la integridad de la BD
+    // const usuario = await Usuario.findByIdAndDelete( id );
+
+    const usuario = await Usuario.findByIdAndUpdate( id, {estado: false} );
+    res.json(usuario);
 
 }
 

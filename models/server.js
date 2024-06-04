@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require ('cors');
+const { dbConnection } = require('../datebase/config');
 
 
 class Server {
@@ -8,15 +9,26 @@ class Server {
     constructor() {
 
         this.app = express();
-        this.port= process.env.PORT;
+        this.port= process.env.PORT || 3000;
         this.usuariosPath = '/api/usuarios';
+
+        //Conectar a base de datos
+        this.conectarDB();
 
         //Middlewares (Funcion que siempre va a ejecutarse cuando levante el srv)
         this.middlewares();
+        
         //Rutas de mi aplicacion
         this.routes();
     }
 
+
+    async conectarDB() {
+        await dbConnection()
+    }
+
+    //Que es un middleware? Es una funcion que se ejecuta ANTES de llamar a un controlador
+    // o seguir con la ejecucion de mis peticiones
     middlewares(){
 
         //CORS
