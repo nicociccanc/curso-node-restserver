@@ -2,7 +2,16 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
 const { esRolValido, emailExiste, existeUsuarioPorId} = require('../helpers/db-validators')
-const { validarCampos } = require ('../middlewares/validar-campos');
+
+//el index no es necesario
+const { 
+    validarCampos,
+    validarJWT,
+    tieneRole,
+    esAdminRole
+} = require ('../middlewares/index');
+
+
 
 
 const { usuariosGet,
@@ -35,14 +44,10 @@ router.post('/', [
 
 
 
-// router.put('/', (req, res) => {
-//     res.status(400).json({
-//         msg: 'Error: NOT FOUND.'
-//     });
-// });
-
-
 router.delete('/:id',[
+    validarJWT,
+    // esAdminRole,
+    tieneRole('ADMIN_ROLE','OTRO_ROLE'),
     check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(existeUsuarioPorId),
     validarCampos

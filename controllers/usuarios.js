@@ -65,7 +65,7 @@ const usuariosPut = async (req, res = response) => {
 }
 
 
-const usuariosPatch= (req, res = response) => {
+const usuariosPatch = (req, res = response) => {
     
     res.json({
         msg: 'patch API - controlador'
@@ -73,14 +73,15 @@ const usuariosPatch= (req, res = response) => {
 
 }
 
-const usuariosDelete= async(req, res = response) => {
+const usuariosDelete = async(req, res = response) => {
     
-    const {id} = req.params;
-    //Fisicamente lo borramos Si lo hacemos asi perdemos la integridad de la BD
-    // const usuario = await Usuario.findByIdAndDelete( id );
+    const { id } = req.params;
 
     const usuario = await Usuario.findByIdAndUpdate( id, {estado: false} );
+
     res.json(usuario);
+
+    
 
 }
 

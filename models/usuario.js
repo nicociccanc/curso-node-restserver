@@ -5,7 +5,6 @@ const { Schema, model } = require ('mongoose');
 
 const UsuarioSchema = Schema ({
 
-
     estado:{
         type: Boolean,
         default: true
@@ -49,7 +48,8 @@ const UsuarioSchema = Schema ({
 UsuarioSchema.methods.toJSON = function () {
 
     //Desestructuro y saco VERSION Y PASSWORD
-    const { __v, password, ...usuario } = this.toObject();
+    const { __v, password, _id, ...usuario } = this.toObject();
+    usuario.uid = _id;
     return usuario;
 
 }
